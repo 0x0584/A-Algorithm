@@ -32,7 +32,7 @@ struct MAZE {
   bool issolvable;
   direc_t *path;
   
-} *maze;
+};
 
 char *readfile(char *path);
 char *readf(FILE *file);
@@ -43,16 +43,16 @@ int
 main(int argc, char **argv)
 {
 
-  char *mmap = (argc < 2) ? readinput() : readfile(argv[1]);
-
-  puts("#");
-
-  maze = (maze_t *) calloc(1, sizeof(maze_t));
-
-  puts((maze->map = mmap));
-
-  mfree(maze);
+  maze_t *maze = (maze_t *) calloc(1, sizeof(maze_t));
   
+  maze->map = (argc < 2) ? readinput() : readfile(argv[1]);
+
+  /* testing.. */
+  puts(maze->map);
+
+  /* don't forget to free the maze! */
+  mfree(maze);
+ 
   return EXIT_SUCCESS;
 }
 
