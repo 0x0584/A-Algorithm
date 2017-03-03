@@ -26,11 +26,12 @@ struct DIREC {
 };
 
 struct MAZE {
-  char *map;
-  cord_t *start, *finish;
+  char *map;			/* the maze map */
+  cord_t mdim;			/* maze dimension */
+  cord_t *start, *target;	/* Starting area and Target area */
   
-  bool issolvable;
-  direc_t *path;
+  bool issolvable;		/* is the maze solvable */
+  direc_t *path;		/* list of direction to go from S to T */
   
 };
 
@@ -61,7 +62,7 @@ maze_t *
 minit(int c, char **v)
 {
   puts("$");
-  enum {START, FINISH};
+  enum {START, TARGET};
 
   maze_t *foomaze = NULL;
   
@@ -70,7 +71,7 @@ minit(int c, char **v)
   
   if(!(foomaze->map = parsemaze((c < 2) ? readinput() : readfile(v[1]))) ||
      !(foomaze->start = getcord(foomaze->map, START)) ||
-     !(foomaze->finish = getcord(foomaze->map, FINISH))) {
+     !(foomaze->target = getcord(foomaze->map, TARGET))) {
     mfree(foomaze);
     return NULL;
   }
@@ -100,7 +101,8 @@ parsemaze(char *file)
     else break;
 
   maze[maze - str] = '\0';
-  
+
+  puts(maze);
   return maze;
 }
 
@@ -110,26 +112,26 @@ getcord(char *maze, short mod)
   cord_t *foocord = NULL;
   unsigned int i;
   char *newline = strchr(maze, '\n'),
-    *target[] = { "S","F"};
+    target[] = { 'S','T'};
 
   if(!(foocord = malloc(sizeof(cord_t))))
     goto RET;
 
   /* the X coordinate is the distination from 
    * the beginning MOD the length of one line */
-  foocord->x = (maze - target[mod]) % (maze - newline);
+  foocord->x = (maze - strchr(maze, target[mod])) % (maze - newline);
 
     puts("$");  
-    printf("%ld", (maze - target[mod]) % (maze - newline));
+    printf("%ld", (maze - strchr(maze, target[mod])) % (maze - newline));
   /* the Y coordinate is # number of '\n' we 
    * have passed throw */
   for(i = 0; i < strlen(maze);) {
     /* count the number of lines */
     if(maze[i] == '\n') ++i;
-    if(&maze[i] == target[mod])
+    if(maze[i] == target[mod])
       foocord->y = i;
+  puts("#");
   }
-  
  RET:
   return foocord;
 }
@@ -192,7 +194,7 @@ mfree(maze_t *m)
 {
   if(m) {
     free(m->start);
-    free(m->finish);
+    free(m->target);
     free(m->map);
     free(m->path);
     free(m);
