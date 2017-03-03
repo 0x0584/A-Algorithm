@@ -1,5 +1,7 @@
 *.org
 *.0
+maze
+labs
 # Created by https://www.gitignore.io/api/c,linux,emacs
 
 ### C ###

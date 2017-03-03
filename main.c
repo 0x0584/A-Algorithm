@@ -27,7 +27,7 @@ struct DIREC {
 
 struct MAZE {
   char *map;
-  cord_t start, finish;
+  cord_t *start, *finish;
   
   bool issolvable;
   direc_t *path;
@@ -35,17 +35,18 @@ struct MAZE {
 };
 
 char *readfile(char *path);
-char *readf(FILE *file);
-char *readinput( void );
+char *readinput();
+maze_t *minit(int, char **);
+char *parsemaze(char *);
 void mfree(maze_t *);
+cord_t *getcord(char *maze, short mod);
 
 int
 main(int argc, char **argv)
 {
 
-  maze_t *maze = (maze_t *) calloc(1, sizeof(maze_t));
-  
-  maze->map = (argc < 2) ? readinput() : readfile(argv[1]);
+  puts("$");
+  maze_t *maze =  minit(argc, argv);
 
   /* testing.. */
   puts(maze->map);
@@ -56,9 +57,89 @@ main(int argc, char **argv)
   return EXIT_SUCCESS;
 }
 
+maze_t *
+minit(int c, char **v)
+{
+  puts("$");
+  enum {START, FINISH};
+
+  maze_t *foomaze = NULL;
+  
+  if(!(foomaze = (maze_t *) calloc(1, sizeof(maze_t))))
+    goto RET;
+  
+  if(!(foomaze->map = parsemaze((c < 2) ? readinput() : readfile(v[1]))) ||
+     !(foomaze->start = getcord(foomaze->map, START)) ||
+     !(foomaze->finish = getcord(foomaze->map, FINISH))) {
+    mfree(foomaze);
+    return NULL;
+  }
+
+  
+ RET:
+  return foomaze;
+}
+
+char *
+parsemaze(char *file)
+{
+  unsigned int i;
+  char *maze, *str,
+    possible[] = {'#', '.'};
+
+  maze = (char *) malloc(strlen(file));
+
+  /* find the begining of the maze */
+  for(i = 0; i < sizeof(possible)/sizeof(possible[0]); ++i)
+    if(!(maze = strchr(file, possible[i]))) continue;
+    else break;
+
+  /* find the end of the maze */
+  for(i = 0; i < sizeof(possible)/sizeof(possible[0]); ++i)
+    if(!(str = strrchr(file, possible[i]))) continue;
+    else break;
+
+  maze[maze - str] = '\0';
+  
+  return maze;
+}
+
+cord_t *
+getcord(char *maze, short mod)
+{
+  cord_t *foocord = NULL;
+  unsigned int i;
+  char *newline = strchr(maze, '\n'),
+    *target[] = { "S","F"};
+
+  if(!(foocord = malloc(sizeof(cord_t))))
+    goto RET;
+
+  /* the X coordinate is the distination from 
+   * the beginning MOD the length of one line */
+  foocord->x = (maze - target[mod]) % (maze - newline);
+
+    puts("$");  
+    printf("%ld", (maze - target[mod]) % (maze - newline));
+  /* the Y coordinate is # number of '\n' we 
+   * have passed throw */
+  for(i = 0; i < strlen(maze);) {
+    /* count the number of lines */
+    if(maze[i] == '\n') ++i;
+    if(&maze[i] == target[mod])
+      foocord->y = i;
+  }
+  
+ RET:
+  return foocord;
+}
+
 char *
 readfile(char *path)
 {
+  /* local prototypes */
+  char *readf(FILE *);
+  
   FILE *foo = NULL;
   char *content = NULL;
 
@@ -110,6 +191,8 @@ void
 mfree(maze_t *m)
 {
   if(m) {
+    free(m->start);
+    free(m->finish);
     free(m->map);
     free(m->path);
     free(m);

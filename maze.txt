@@ -1,7 +1,6 @@
-XXXXXXXXXXX
-XXXXXXXXXXX
-XXXXXXXXXXX
-XXXXXXXXXXX
-XXXXXXXXXXX
-XXXXXXXXXXX
-XXXXXXXXXXX
+##.##...####
+##.#..####F#
+..##.##.#..#
+#..#...#..##
+##S..#...#.#
+##.##.###.##
