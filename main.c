@@ -1,202 +1,240 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <time.h>
 
-typedef enum BOOL bool;
-typedef struct COORDINATE cord_t;
-typedef struct DIREC direc_t;
-typedef struct MAZE maze_t;
+/* maze dimensions */
+#define XDIM 8
+#define YDIM XDIM
 
-enum BOOL{
-  false = (1 == 0),
-  true = !false
-};
+#define START 0
+#define TARGET 1
+#define POINTS_COUNT 2
 
-enum DIRECTION {
-  NORTH = 0, SOUTH,
-  EAST, WEST
-};
+#define WALLS 3
 
-struct COORDINATE {
-  int x, y;
-};
+typedef enum BOOL {
+  false = (1==0),
+  true = !(false)
+} bool;
 
-struct DIREC {
-  short direc:2;
-};
+typedef unsigned int index;
+typedef unsigned int uint;
 
-struct MAZE {
-  char *map;			/* the maze map */
-  cord_t mdim;			/* maze dimension */
-  cord_t *start, *target;	/* Starting area and Target area */
+typedef struct COORDINATE {
+  uint x, y;
+} cord_t;
+
+typedef struct NODE {
+  cord_t *cord,			/* coordinate of the node */
+    *parent;			/* parent of the node */
+  bool iswall;			/* is wall: true | false */
+
+} node_t;
+
+typedef struct MAZE {
+  node_t **map;			/* maze map */
+  uint xdim, ydim;	/* map dimensions */
+
+  cord_t *area;			/* starting and target area */
   
-  bool issolvable;		/* is the maze solvable */
-  direc_t *path;		/* list of direction to go from S to T */
-  
-};
+} maze_t;
 
-char *readfile(char *path);
-char *readinput();
-maze_t *minit(int, char **);
-char *parsemaze(char *);
-void mfree(maze_t *);
-cord_t *getcord(char *maze, short mod);
+/* functions protoype */
+maze_t *initmaze(void);
+node_t **initmap(uint __xdim, uint __ydim,
+		 cord_t *__area);
+void putmaze(maze_t *__maze);
+void mfree(maze_t *__maze);
+void seek(maze_t *__maze, cord_t *__area);
 
+/* the main function */
 int
-main(int argc, char **argv)
+main()
 {
-
   puts("$");
-  maze_t *maze =  minit(argc, argv);
-
-  /* testing.. */
-  puts(maze->map);
-
-  /* don't forget to free the maze! */
-  mfree(maze);
+  srand(time(NULL));
+  
+  maze_t *maze = initmaze();
+  
+  printf("START(%d, %d) -> TARGET(%d, %d)\n",
+	 maze->area[START].x, maze->area[START].y,
+	 maze->area[TARGET].x, maze->area[TARGET].y);
  
-  return EXIT_SUCCESS;
+  putmaze(maze);
+
+  seek(maze, maze->area);
+  
+  mfree(maze);
+  
+  return 0;
 }
 
 maze_t *
-minit(int c, char **v)
+initmaze(void) 
 {
-  puts("$");
-  enum {START, TARGET};
-
   maze_t *foomaze = NULL;
-  
-  if(!(foomaze = (maze_t *) calloc(1, sizeof(maze_t))))
-    goto RET;
-  
-  if(!(foomaze->map = parsemaze((c < 2) ? readinput() : readfile(v[1]))) ||
-     !(foomaze->start = getcord(foomaze->map, START)) ||
-     !(foomaze->target = getcord(foomaze->map, TARGET))) {
-    mfree(foomaze);
-    return NULL;
-  }
 
-  
- RET:
+  /* allocate memory */
+  foomaze = (maze_t *) malloc(sizeof(cord_t));
+
+  /* get maze dimensions */
+  foomaze->xdim = XDIM;
+  foomaze->ydim = YDIM;
+
+  foomaze->area = (cord_t *) malloc(POINTS_COUNT*sizeof(cord_t));
+
+  /* setup the maze map */
+  foomaze->map = initmap(foomaze->xdim, foomaze->ydim, foomaze->area);  
+
   return foomaze;
 }
 
-char *
-parsemaze(char *file)
+node_t **
+initmap(uint x, uint y, cord_t *a)
 {
-  unsigned int i;
-  char *maze, *str,
-    possible[] = {'#', '.'};
+  node_t **m;		/* our map */
+  index i, j;
+  
+  /* allocate memory */
+  m = (node_t **) malloc(x * sizeof(node_t *));
+  
+  for(i = 0; i < x; ++i) {
+    
+    /* allocate memory */
+    m[i] = (node_t *) malloc(y * sizeof(node_t));    
 
-  maze = (char *) malloc(strlen(file));
+    /* fill the map */
+    for(j = 0; j < y; ++j) {
+      /* allocate memory, always.. */
+      m[i][j].cord = (cord_t *) malloc(sizeof(cord_t));
+      m[i][j].parent = (cord_t *) malloc(sizeof(cord_t));
+      
+      /* get coordinates */
+      m[i][j].cord->x = i;
+      m[i][j].cord->y = j;
 
-  /* find the begining of the maze */
-  for(i = 0; i < sizeof(possible)/sizeof(possible[0]); ++i)
-    if(!(maze = strchr(file, possible[i]))) continue;
-    else break;
+      /* set node's parent */
+      m[i][j].parent = NULL;
 
-  /* find the end of the maze */
-  for(i = 0; i < sizeof(possible)/sizeof(possible[0]); ++i)
-    if(!(str = strrchr(file, possible[i]))) continue;
-    else break;
-
-  maze[maze - str] = '\0';
-
-  puts(maze);
-  return maze;
-}
-
-cord_t *
-getcord(char *maze, short mod)
-{
-  cord_t *foocord = NULL;
-  unsigned int i;
-  char *newline = strchr(maze, '\n'),
-    target[] = { 'S','T'};
-
-  if(!(foocord = malloc(sizeof(cord_t))))
-    goto RET;
-
-  /* the X coordinate is the distination from 
-   * the beginning MOD the length of one line */
-  foocord->x = (maze - strchr(maze, target[mod])) % (maze - newline);
-
-    puts("$");  
-    printf("%ld", (maze - strchr(maze, target[mod])) % (maze - newline));
-  /* the Y coordinate is # number of '\n' we 
-   * have passed throw */
-  for(i = 0; i < strlen(maze);) {
-    /* count the number of lines */
-    if(maze[i] == '\n') ++i;
-    if(maze[i] == target[mod])
-      foocord->y = i;
-  puts("#");
+      /* node type */
+      m[i][j].iswall = !(rand()%WALLS) ? true : false;
+    }
   }
- RET:
-  return foocord;
-}
 
-char *
-readfile(char *path)
-{
-  /* local prototypes */
-  char *readf(FILE *);
+  /* set random coordinates for the starting-area */
+  a[START].x = rand()%x;
+  a[START].y = rand()%y;
+
+  /* set random coordinates for the  target-area */
+  a[TARGET].x = rand()%x;
+  a[TARGET].y = rand()%y;
   
-  FILE *foo = NULL;
-  char *content = NULL;
-
-  /* getting the content of the file (in `path`)  */
-  if(!(content = readf(foo = fopen(path, "r"))))
-    fprintf(stderr, "cannot open the file (%s).", path);
-
-  /* always close the file-pointer */
-  fclose(foo);
-  
-  return content;
-}
-
-char *
-readf (FILE *f)
-{
-
-  int string_size = 0, read_size = -1;
-  char *buffer = NULL;
-
-  if(!f) goto RET; /* the file-pointer is NULL */
-
-  fseek(f, 0, SEEK_END); /* Beginning of the stream */
-  string_size = ftell(f); /* Size of the stream */
-  rewind(f);
-
-  /* allocate memory  */
-  buffer = (char*) malloc((string_size + 1) * sizeof(char));
-        
-  /* Binary size of the stream */
-  read_size = fread(buffer, sizeof(char), string_size, f);
-  buffer[string_size] = '\0';
-  
-  /* readied size != stream size) 
-   * this implies that there was an error while 
-   * reading the file, return NULL. 
-   * otherwise, return the buffer */
- RET:
-  return (string_size != read_size) ? free(buffer), buffer = NULL: buffer;
-}
-
-char *
-readinput( void )
-{
-  return "NONE";
+  return m;
 }
 
 void
+putmaze(maze_t *m)
+{
+  index i, j;		/* out counters */
+  
+  for(i = 0; i < m->xdim; ++i) {
+    for(j = 0; j < m->ydim; ++j) {
+      /* temporary variables */
+      bool wall = m->map[i][j].iswall;
+      uint xstart = m->area[START].x, ystart = m->area[START].y,
+	xtarget = m->area[TARGET].x, ytarget = m->area[TARGET].y;
+      char nodeval;	/* hold the node value */
+
+      /* determinate the nodeval based on its type */
+      if(xstart == i &&  ystart == j) nodeval = 'S';
+      else if (xtarget == i && ytarget == j) nodeval = 'T';
+      else if(wall) nodeval = '#';
+      else nodeval = '.';
+
+      /* put it on the screen */
+      putchar(nodeval);
+    }
+    
+    putchar('\n');
+  }
+}
+
+void
+seek(maze_t *m, cord_t *a)
+{
+#define LEFT(w, x, y) w[x][y - 1]
+#define RIGHT(w, x, y) w[x][y + 1]
+#define UP(w, x, y) w[x - 1][y]
+#define DOWN(w, x, y) w[x + 1][y]
+  
+#define UPLEFT(w, x, y) w[x - 1][y - 1]
+#define DOWNLEFT(w, x, y) w[x + 1][y - 1]
+#define UPRIGHT(w, x, y) w[x - 1][y + 1]
+#define DOWNRIGHT(w, x, y) w[x + 1][y + 1]
+
+  
+  /* NOTE:
+   * 
+   * this is a temporary version of this
+   * function! i have to find out what's
+   * the problem with realloc()
+   */
+
+  /* local functions */
+  /* void addtolist(cord_t *__list, uint *__lsize, cord_t *__node) { */
+  /*   printf("$>x:%d, y:%d - size:%d\n", __node->x, __node->y, *__lsize); */
+  /*   getchar(); */
+  /*   __list = realloc(__list, (++*__lsize)); /\* reallcoate memory *\/ */
+  /*   __list[*__lsize - 1] = *__node;	    /\* add node to list *\/ */
+  /* }; */
+  void iswalkable(maze_t *__maze, cord_t *__parent) {
+    printf("parent: x:%d, y:%d\n", __parent->x, __parent->y);
+  };
+
+  index i, j,		            /* our counters */
+    sizeofmaze = m->xdim * m->ydim;
+  cord_t *open, *close;		    /* our open/closed lists */
+  uint ocount = 0, ccount = 0;	    /* open/closed list count */
+  uint xtarget = a[TARGET].x,
+    ytarget = a[TARGET].y;
+
+  /* allocate memory, as always.. */
+  open = (cord_t *) calloc(sizeofmaze, sizeof(cord_t));
+  close = (cord_t *) calloc(sizeofmaze, sizeof(cord_t));
+
+  /* seeking the target */
+  while(open[ocount].x != xtarget &&
+	open[ocount].y != ytarget) {
+
+
+    printf("count:\t%d", ocount);
+    getchar();  
+
+    iswalkable(m, &a[START]);
+
+    break;
+  }
+
+  /* always free you memory.. */
+  free(open);
+  free(close);
+}
+void
 mfree(maze_t *m)
 {
-  if(m) {
-    free(m->start);
-    free(m->target);
+  index i, j;
+  
+  if(!m) {    
+    for(i = 0; i < m->ydim; ++i)
+      for(j = 0; j < m->ydim; ++j) {
+	free(m->map[i][j].cord);
+	free(m->map[i][j].parent);
+      }
+    
+    for(i = 0; i < m->ydim; ++i)
+      free(m->map[i]);
     free(m->map);
-    free(m->path);
+    free(m->area);
     free(m);
   }
 }

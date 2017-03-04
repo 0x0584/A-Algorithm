@@ -8,7 +8,7 @@ OBJ = main.o
 DEPS = #
 
 EXEC = maze
-ARGS = maze.txt
+ARGS = #
 
 all: main
 	@echo "finish."
