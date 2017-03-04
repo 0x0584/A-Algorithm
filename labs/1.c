@@ -10,25 +10,30 @@
 #define TARGET 1
 #define POINTS_COUNT 2
 
-#define WALLS 5
+#define WALLS 3
 
 typedef enum BOOL {
   false = (1==0),
   true = !(false)
 } bool;
 
+typedef unsigned int index;
+typedef unsigned int uint;
+
 typedef struct COORDINATE {
-  unsigned int x, y;
+  uint x, y;
 } cord_t;
 
 typedef struct NODE {
-  cord_t *cord;			/* coordinate of the node */
+  cord_t *cord,			/* coordinate of the node */
+    *parent;			/* parent of the node */
   bool iswall;			/* is wall: true | false */
+
 } node_t;
 
 typedef struct MAZE {
   node_t **map;			/* maze map */
-  unsigned int xdim, ydim;	/* map dimensions */
+  uint xdim, ydim;	/* map dimensions */
 
   cord_t *area;			/* starting and target area */
   
@@ -36,7 +41,7 @@ typedef struct MAZE {
 
 /* functions protoype */
 maze_t *initmaze(void);
-node_t **initmap(unsigned int __xdim, unsigned int __ydim,
+node_t **initmap(uint __xdim, uint __ydim,
 		 cord_t *__area);
 void putmaze(maze_t *__maze);
 void mfree(maze_t *__maze);
@@ -48,14 +53,13 @@ main()
 {
   puts("$");
   srand(time(NULL));
-
+  
   maze_t *maze = initmaze();
   
   printf("START(%d, %d) -> TARGET(%d, %d)\n",
 	 maze->area[START].x, maze->area[START].y,
 	 maze->area[TARGET].x, maze->area[TARGET].y);
-
-
+ 
   putmaze(maze);
 
   seek(maze, maze->area);
@@ -65,11 +69,12 @@ main()
   return 0;
 }
 
-
-maze_t *initmaze(void) 
+maze_t *
+initmaze(void) 
 {
   maze_t *foomaze = NULL;
-  
+
+  /* allocate memory */
   foomaze = (maze_t *) malloc(sizeof(cord_t));
 
   /* get maze dimensions */
@@ -85,35 +90,42 @@ maze_t *initmaze(void)
 }
 
 node_t **
-initmap(unsigned int x, unsigned int y, cord_t *a)
+initmap(uint x, uint y, cord_t *a)
 {
   node_t **m;		/* our map */
+  index i, j;
   
   /* allocate memory */
   m = (node_t **) malloc(x * sizeof(node_t *));
   
-  for(unsigned int i = 0; i < x; ++i) {
+  for(i = 0; i < x; ++i) {
     
     /* allocate memory */
     m[i] = (node_t *) malloc(y * sizeof(node_t));    
 
     /* fill the map */
-    for(unsigned int j = 0; j < y; ++j) {
+    for(j = 0; j < y; ++j) {
       /* allocate memory, always.. */
       m[i][j].cord = (cord_t *) malloc(sizeof(cord_t));
-
+      m[i][j].parent = (cord_t *) malloc(sizeof(cord_t));
+      
       /* get coordinates */
       m[i][j].cord->x = i;
       m[i][j].cord->y = j;
+
+      /* set node's parent */
+      m[i][j].parent = NULL;
+
+      /* node type */
       m[i][j].iswall = !(rand()%WALLS) ? true : false;
     }
   }
 
-  /* set a random starting-area */
+  /* set random coordinates for the starting-area */
   a[START].x = rand()%x;
   a[START].y = rand()%y;
 
-  /* set a random target-area */
+  /* set random coordinates for the  target-area */
   a[TARGET].x = rand()%x;
   a[TARGET].y = rand()%y;
   
@@ -123,41 +135,104 @@ initmap(unsigned int x, unsigned int y, cord_t *a)
 void
 putmaze(maze_t *m)
 {
-  unsigned int i, j;		/* out counters */
+  index i, j;		/* out counters */
   
   for(i = 0; i < m->xdim; ++i) {
     for(j = 0; j < m->ydim; ++j) {
       /* temporary variables */
       bool wall = m->map[i][j].iswall;
-      unsigned int xstart = m->area[START].x,
-	ystart = m->area[START].y,
-	xtarget = m->area[TARGET].x,
-	ytarget = m->area[TARGET].y;
+      uint xstart = m->area[START].x, ystart = m->area[START].y,
+	xtarget = m->area[TARGET].x, ytarget = m->area[TARGET].y;
+      char nodeval;	/* hold the node value */
 
-      char nodeval;		/* hold the node value */
-      
+      /* determinate the nodeval based on its type */
       if(xstart == i &&  ystart == j) nodeval = 'S';
       else if (xtarget == i && ytarget == j) nodeval = 'T';
       else if(wall) nodeval = '#';
       else nodeval = '.';
 
+      /* put it on the screen */
       putchar(nodeval);
     }
+    
     putchar('\n');
   }
 }
 
 void
+seek(maze_t *m, cord_t *a)
+{
+#define LEFT(w, x, y) w[x][y - 1]
+#define RIGHT(w, x, y) w[x][y + 1]
+#define UP(w, x, y) w[x - 1][y]
+#define DOWN(w, x, y) w[x + 1][y]
+  
+#define UPLEFT(w, x, y) w[x - 1][y - 1]
+#define DOWNLEFT(w, x, y) w[x + 1][y - 1]
+#define UPRIGHT(w, x, y) w[x - 1][y + 1]
+#define DOWNRIGHT(w, x, y) w[x + 1][y + 1]
+
+  
+  /* NOTE:
+   * 
+   * this is a temporary version of this
+   * function! i have to find out what's
+   * the problem with realloc()
+   */
+
+  /* local functions */
+  /* void addtolist(cord_t *__list, uint *__lsize, cord_t *__node) { */
+  /*   printf("$>x:%d, y:%d - size:%d\n", __node->x, __node->y, *__lsize); */
+  /*   getchar(); */
+  /*   __list = realloc(__list, (++*__lsize)); /\* reallcoate memory *\/ */
+  /*   __list[*__lsize - 1] = *__node;	    /\* add node to list *\/ */
+  /* }; */
+  void iswalkable(maze_t *__maze, cord_t *__parent) {
+    printf("parent: x:%d, y:%d\n", __parent->x, __parent->y);
+  };
+
+  index i, j,		            /* our counters */
+    sizeofmaze = m->xdim * m->ydim;
+  cord_t *open, *close;		    /* our open/closed lists */
+  uint ocount = 0, ccount = 0;	    /* open/closed list count */
+  uint xtarget = a[TARGET].x,
+    ytarget = a[TARGET].y;
+
+  /* allocate memory, as always.. */
+  open = (cord_t *) calloc(sizeofmaze, sizeof(cord_t));
+  close = (cord_t *) calloc(sizeofmaze, sizeof(cord_t));
+
+  /* seeking the target */
+  while(open[ocount].x != xtarget &&
+	open[ocount].y != ytarget) {
+
+
+    printf("count:\t%d", ocount);
+    getchar();  
+
+    iswalkable(m, &a[START]);
+
+    break;
+  }
+
+  /* always free you memory.. */
+  free(open);
+  free(close);
+}
+void
 mfree(maze_t *m)
 {
+  index i, j;
+  
   if(!m) {    
-    for(unsigned int i = 0; i < m->ydim; ++i)
-      for(unsigned int j = 0; j < m->ydim; ++j)
+    for(i = 0; i < m->ydim; ++i)
+      for(j = 0; j < m->ydim; ++j) {
 	free(m->map[i][j].cord);
+	free(m->map[i][j].parent);
+      }
     
-    for(unsigned int i = 0; i < m->ydim; ++i)
+    for(i = 0; i < m->ydim; ++i)
       free(m->map[i]);
-
     free(m->map);
     free(m->area);
     free(m);
