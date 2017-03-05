@@ -145,9 +145,10 @@ putmaze(maze_t *m)
 	xtarget = m->area[TARGET].x, ytarget = m->area[TARGET].y;
       char nodeval;	/* hold the node value */
 
-      /* determinate the nodeval based on its type */
+      /* if the node is the starting/target node */
       if(xstart == i &&  ystart == j) nodeval = 'S';
       else if (xtarget == i && ytarget == j) nodeval = 'T';
+      /* determinate the `nodeval` based on its type */
       else if(wall) nodeval = '#';
       else nodeval = '.';
 
@@ -172,14 +173,6 @@ seek(maze_t *m, cord_t *a)
 #define UPRIGHT(w, x, y) w[x - 1][y + 1]
 #define DOWNRIGHT(w, x, y) w[x + 1][y + 1]
 
-  
-  /* NOTE:
-   * 
-   * this is a temporary version of this
-   * function! i have to find out what's
-   * the problem with realloc()
-   */
-
   /* local functions */
   /* void addtolist(cord_t *__list, uint *__lsize, cord_t *__node) { */
   /*   printf("$>x:%d, y:%d - size:%d\n", __node->x, __node->y, *__lsize); */
@@ -187,31 +180,52 @@ seek(maze_t *m, cord_t *a)
   /*   __list = realloc(__list, (++*__lsize)); /\* reallcoate memory *\/ */
   /*   __list[*__lsize - 1] = *__node;	    /\* add node to list *\/ */
   /* }; */
-  void iswalkable(maze_t *__maze, cord_t *__parent) {
-    printf("parent: x:%d, y:%d\n", __parent->x, __parent->y);
+  bool iswalkable(node_t *__node, cord_t *__parent) {
+    return __node->iswall ? ( __node->parent = __parent), true : false;
   };
 
   index i, j,		            /* our counters */
-    sizeofmaze = m->xdim * m->ydim;
+    sizeofmaze;			    /* # of nodes in the maze */
   cord_t *open, *close;		    /* our open/closed lists */
   uint ocount = 0, ccount = 0;	    /* open/closed list count */
   uint xtarget = a[TARGET].x,
     ytarget = a[TARGET].y;
+  
+  sizeofmaze = m->xdim * m->ydim; 
 
+  /* TODO:
+   * 
+   * this is a temporary version of this
+   * function! i have to find out what's
+   * the problem with realloc()!
+   */
+  
   /* allocate memory, as always.. */
   open = (cord_t *) calloc(sizeofmaze, sizeof(cord_t));
   close = (cord_t *) calloc(sizeofmaze, sizeof(cord_t));
 
-  /* seeking the target */
+  /* seeking the target.. */
   while(open[ocount].x != xtarget &&
 	open[ocount].y != ytarget) {
 
+    printf("count:\t%d\n", ocount);
+    
+    for(i = 0; i < m->xdim; ++i) {
+      for(j = 0; j < m->ydim; ++j) {	
+	char state[] = {'w', 'n'};
+	bool s;
 
-    printf("count:\t%d", ocount);
-    getchar();  
+	if(iswalkable(&(m->map[i][j]), &a[START]))
+	  s = true;
+	else s = false;
+	if(m->map[i][j].parent == NULL) putchar('$');
+	
+	printf("%c\t", state[s]);
 
-    iswalkable(m, &a[START]);
-
+      }
+      putchar('\n');
+    }
+    
     break;
   }
 
