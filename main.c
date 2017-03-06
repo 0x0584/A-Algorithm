@@ -181,13 +181,13 @@ seek(maze_t *m, cord_t *a)
   /*   __list[*__lsize - 1] = *__node;	    /\* add node to list *\/ */
   /* }; */
   bool iswalkable(node_t *__node, cord_t *__parent) {
-    return __node->iswall ? ( __node->parent = __parent), true : false;
+    return !(__node->iswall) ? ( __node->parent = __parent), false : true;
   };
 
   index i, j,		            /* our counters */
     sizeofmaze;			    /* # of nodes in the maze */
-  cord_t *open, *close;		    /* our open/closed lists */
-  uint ocount = 0, ccount = 0;	    /* open/closed list count */
+  cord_t **open, **close;	    /* our open/closed lists */
+  uint ocount = -1, ccount = 0;	    /* open/closed list count */
   uint xtarget = a[TARGET].x,
     ytarget = a[TARGET].y;
   
@@ -201,26 +201,27 @@ seek(maze_t *m, cord_t *a)
    */
   
   /* allocate memory, as always.. */
-  open = (cord_t *) calloc(sizeofmaze, sizeof(cord_t));
-  close = (cord_t *) calloc(sizeofmaze, sizeof(cord_t));
+  open = (cord_t **) calloc(sizeofmaze, sizeof(cord_t *));
+  close = (cord_t **) calloc(sizeofmaze, sizeof(cord_t *));
 
   /* seeking the target.. */
-  while(open[ocount].x != xtarget &&
-	open[ocount].y != ytarget) {
+  while(ocount) {
 
-    printf("count:\t%d\n", ocount);
+    printf("ocount:\t%d - ccount:\t%d\n", ocount, ccount);
     
     for(i = 0; i < m->xdim; ++i) {
-      for(j = 0; j < m->ydim; ++j) {	
-	char state[] = {'w', 'n'};
-	bool s;
+      for(j = 0; j < m->ydim; ++j) {
 
-	if(iswalkable(&(m->map[i][j]), &a[START]))
-	  s = true;
-	else s = false;
-	if(m->map[i][j].parent == NULL) putchar('$');
+	char state[] = { 'w', 'n' };
+	bool s = iswalkable(&(m->map[i][j]), &a[START]);
+
+	printf("%c", state[s]);
 	
-	printf("%c\t", state[s]);
+	if(m->map[i][j].parent != NULL)
+	  printf(" %d, %d", m->map[i][j].parent->x,
+		 m->map[i][j].parent->y);
+	
+	putchar('\t');
 
       }
       putchar('\n');
