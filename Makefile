@@ -20,6 +20,7 @@ main: $(OBJ)
 	$(CC) $(CFLAGS) -c -o $@ $< $(LDFLAGS)
 
 run: remake
+	@clear
 	./$(EXEC) $(ARGS)
 
 remake: clean all
