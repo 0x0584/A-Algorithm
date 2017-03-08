@@ -33,14 +33,16 @@
 
 
 /* maze dimensions */
-#define XDIM 30
-#define YDIM (2 * XDIM)
+#define XDIM 20
+#define YDIM XDIM
 
 #define START 0
 #define TARGET 1
 #define POINTS_COUNT 2
+
 #define FVALUE(x, y) (x + y)
-#define WALLS 3
+
+#define WALLS 2
 
 typedef enum BOOL {
   false = (1==0),
@@ -190,6 +192,7 @@ putmaze(maze_t *m)
       uint xstart = m->area[START].x, ystart = m->area[START].y,
 	xtarget = m->area[TARGET].x, ytarget = m->area[TARGET].y;
       char nodeval;	/* hold the node value */
+
 #define STARTCHAR 'S'
 #define TARGETCHAR 'T'
 #define WALLCHAR '#'
@@ -211,14 +214,14 @@ putmaze(maze_t *m)
       }
       */
 #define putcolored(C, BACK, FORE) \
-      printf("\033[%d;%dm%c\033[%d;%dm", FORE, BACK,	\
+      printf("\033[%d;%dm %c \033[%d;%dm", FORE, BACK,	\
 	     C, FWHITE, BBLACK)
       
       switch(nodeval) {
-      case WALLCHAR: putcolored(nodeval, FBLACK, BBLUE); break;
+      case WALLCHAR: putcolored(nodeval, FBLUE, BWHITE); break;
       case STARTCHAR: putcolored(nodeval, FBLACK, BGREEN); break;
       case TARGETCHAR: putcolored(nodeval, FBLACK, BRED); break;
-      default: putcolored(nodeval, FBLACK, BBLACK); break;
+      default: putcolored(nodeval, FBLACK, BWHITE); break;
       };
     }    
     putchar('\n');
