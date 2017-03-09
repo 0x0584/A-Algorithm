@@ -1,114 +1,4 @@
-/* note to self:
- *
- * you vs time; who would be the winner? 
- * trust me, you don't really what would happen 
- * if you lose; an undefined behavior!
- */
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-
-/* foreground colors */
-#define FBLACK	 30
-#define FWHITE   37
-
-#define FRED	 31
-#define FGREEN	 32
-#define FYELLOW  33
-#define FBLUE	 34
-#define FMAGENTA 35
-#define FCYAN	 36
-
-/* background colors */
-#define BBLACK	 40
-#define BWHITE   47
-
-#define BRED	 41
-#define BGREEN	 42
-#define BYELLOW  43
-#define BBLUE	 44
-#define BMAGENTA 45
-#define BCYAN	 46
-
-
-/* maze dimensions */
-#define XDIM 20
-#define YDIM XDIM
-
-#define START 0
-#define TARGET 1
-#define POINTS_COUNT 2
-
-#define FVALUE(x, y) (x + y)
-
-#define WALLS 2
-
-typedef enum BOOL {
-  false = (1==0),
-  true = !(false)
-} bool;
-
-typedef unsigned int index;
-typedef unsigned int uint;
-
-typedef struct COORDINATE {
-  uint x; 			/* x-axis */
-  uint y;			/* y-axis */
-} cord_t;
-
-typedef struct NODE {
-  cord_t *cord,			/* coordinate of the node */
-    *parent;			/* parent of the node */
-  bool iswall;			/* is wall: true | false */
-  uint mvcost,			/* G value is vary between 
-				 * horizontal/vertical directions*/
-    heuristic;			/* H value */
-  bool isopen;  		/* if true, we can take consider
-				 * this node as a future pathway */
-  /* for performance reasons; avoiding 
-   * decimals! using a whole number is 
-   * a lot faster.. */
-  #define G_HV 10		/* this is actually 1 */
-  #define G_DIAG 14		/* this is actually sqrt(2) */
-} node_t;
-
-typedef struct MAZE {
-  node_t **map;			/* maze map */
-  uint xdim, ydim;		/* map dimensions */
-
-  cord_t *area;			/* starting and target area */
-} maze_t;
-
-/* functions protoype */
-maze_t *initmaze(void);
-node_t **initmap(uint __xdim, uint __ydim, /* map dimensions */
-		 cord_t *__area);	   /* set of points */
-void putmaze(maze_t *__maze);
-void mfree(maze_t *__maze);
-void seek(maze_t *__maze, cord_t *__area);
-
-/* the main function */
-int
-main()
-{
-  puts("$");
-  srand(time(NULL));
-  
-  maze_t *maze = initmaze();
-  
-  printf("START(%d, %d) -> TARGET(%d, %d)\n",
-	 maze->area[START].x, maze->area[START].y,
-	 maze->area[TARGET].x, maze->area[TARGET].y);
- 
-  putmaze(maze);
-
-  seek(maze, maze->area);
-  
-  mfree(maze);
-  
-  return 0;
-}
+#include "../include/lib.h"
 
 maze_t *
 initmaze(void) 
@@ -182,21 +72,27 @@ initmap(uint x, uint y, cord_t *a)
 void
 putmaze(maze_t *m)
 {
+#define STARTCHAR 'S'
+#define TARGETCHAR 'T'
+#define WALLCHAR '@'
+#define ROADCHAR '.'
+#define SIDEWALL '+'
+#define putcolored(C, BACK, FORE)			\
+  printf("\033[%d;%dm %c \033[%d;%dm", FORE, BACK,	\
+	 C, FWHITE, BBLACK)
+#define putside() putcolored(SIDEWALL, FMAGENTA, BWHITE)
+
   index i, j;		/* out counters */
   
   for(i = 0; i < m->xdim; ++i) {
+    putside(); /* print a sidewall each time we begin a new line */
     for(j = 0; j < m->ydim; ++j) {
-
-      /* temporary variables */
+      char nodeval;			     /* hold the node value */
+      bool isfirsttime = (i == 0 && j == 0), /* when to print sidewalls */
+	islasttime = (i == (m->xdim - 1) && j == (m->ydim - 1));
       bool wall = m->map[i][j].iswall;
       uint xstart = m->area[START].x, ystart = m->area[START].y,
 	xtarget = m->area[TARGET].x, ytarget = m->area[TARGET].y;
-      char nodeval;	/* hold the node value */
-
-#define STARTCHAR 'S'
-#define TARGETCHAR 'T'
-#define WALLCHAR '#'
-#define ROADCHAR '.'
       
       /* if the node is the starting/target node */
       if(i == xstart &&  j == ystart) nodeval = STARTCHAR;
@@ -204,28 +100,46 @@ putmaze(maze_t *m)
       /* determinate the `nodeval` based on its type */
       else if(wall) nodeval = WALLCHAR;
       else nodeval = ROADCHAR;
-      /*
-      for(int i = 20; i < 50; ++i) {
-	printf("i:%d\n", i);
-	for(j = 20; j < 50; ++j)
-	  printf("\033[%d;%dmj:\t%d \033[0;37m ",i, j,j);
-	//      getchar();
-        printf("\n\n\n");
-      }
-      */
-#define putcolored(C, BACK, FORE) \
-      printf("\033[%d;%dm %c \033[%d;%dm", FORE, BACK,	\
-	     C, FWHITE, BBLACK)
       
+      /* print the upper-bar */
+      if(isfirsttime) {
+	/* the bar */
+	for(index k = 0; k < m->xdim; ++k) 
+	  putcolored('+',  FMAGENTA, BWHITE);
+	  /* putside(); */
+	/* sidewalls */
+	putside(), putchar('\n');
+	putside();
+      }
+      
+      /* vary the node-color based on its type */
       switch(nodeval) {
       case WALLCHAR: putcolored(nodeval, FBLUE, BWHITE); break;
       case STARTCHAR: putcolored(nodeval, FBLACK, BGREEN); break;
-      case TARGETCHAR: putcolored(nodeval, FBLACK, BRED); break;
+      case TARGETCHAR: putcolored(nodeval, FBLACK, BYELLOW); break;
+
       default: putcolored(nodeval, FBLACK, BWHITE); break;
       };
-    }    
+
+      /* print the bottom-bar */
+      if(islasttime) {
+	putside(), putchar('\n');
+	putside();
+	for(index k = 0; k < m->xdim; ++k) 
+	  putcolored('+',  FMAGENTA, BWHITE);
+	  /* putside(); */
+      }
+    }
+    putside();
     putchar('\n');
   }
+#undef putcolored
+#undef putside
+#undef STARTCHAR 
+#undef TARGETCHAR 
+#undef WALLCHAR 
+#undef ROADCHAR
+#undef SIDEWALL
 }
 
 void
@@ -291,6 +205,7 @@ seek(maze_t *m, cord_t *a)
 
     return false;
   };
+
   /* seeking the target.. */
   while(isthereopen(m) ^ isfirsttime) {
     cord_t current;		   /* the current node */
@@ -303,31 +218,63 @@ seek(maze_t *m, cord_t *a)
     }
     else
       current = nextstep(m->map, current);
-    
-    printf("\nocount:\t%d\t\tccount:\t%d\ncurrent(%d, %d)\n",
+
+#ifdef DEBUG    
+    printf("\ncurrent(%d, %d)\n",
 	   current.x, current.y);
+#endif
+
     break;
   }
 
-  /* always free you memory.. */
 }
 
 void
 mfree(maze_t *m)
 {
   index i, j;
-  
-  if(!m) {    
-    for(i = 0; i < m->ydim; ++i)
+  /* WHY THE FUCK WOULD SOMEONE PUT
+   * if(!p) {..} INSTEAD OF if(p)!!! */
+  if(m) {    
+#ifdef MEM_DEBUG
+    printf("freeing.. ");
+    printf("m:\t %p\n----\n", m);
+#endif
+    for(i = 0; i < m->ydim; ++i) {
       for(j = 0; j < m->ydim; ++j) {
+#ifdef MEM_DEBUG
+	printf("freeing.. ");
+	printf("m->map[%d][%d].cord:\t %p | .parent:\t %p\n", 
+	       i, j, m->map[i][j].cord, m->map[i][j].parent);
+#endif
 	free(m->map[i][j].cord);
 	free(m->map[i][j].parent);
       }
-    
-    for(i = 0; i < m->ydim; ++i)
+#ifdef MEM_DEBUG
+      printf("\n----\n", m);
+#endif
+    }
+    for(i = 0; i < m->ydim; ++i) {
+#ifdef MEM_DEBUG
+      printf("freeing.. ");
+      printf("m->map[%d]:\t %p\n",i, m->map[i]);
+#endif
       free(m->map[i]);
+    }
+#ifdef MEM_DEBUG
+    printf("freeing.. ");
+    printf("m->map:\t %p\n", m->map);
+#endif
     free(m->map);
+#ifdef MEM_DEBUG
+    printf("freeing.. ");
+    printf("m->area:\t %p\n", m->area);
+#endif
     free(m->area);
+#ifdef MEM_DEBUG
+    printf("freeing.. ");
+    printf("m:\t %p\n", m);
+#endif
     free(m);
   }
 }
