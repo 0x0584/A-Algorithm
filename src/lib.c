@@ -145,12 +145,12 @@ putmaze(maze_t *m)
 void
 seek(maze_t *m, cord_t *a)
 {
-#define POSSIBLE_MOVES 8 /* no limit on the moves (e.g. no diagonal) */
-  
-#define LEFT(w, x, y) w[x][y - 1]
-#define RIGHT(w, x, y) w[x][y + 1]
+#define POSSIBLE_MOVES 8 /* no limit on the moves */
+
 #define UP(w, x, y) w[x - 1][y]
 #define DOWN(w, x, y) w[x + 1][y]
+#define LEFT(w, x, y) w[x][y - 1]
+#define RIGHT(w, x, y) w[x][y + 1]
 #define UPLEFT(w, x, y) w[x - 1][y - 1]
 #define DOWNLEFT(w, x, y) w[x + 1][y - 1]
 #define UPRIGHT(w, x, y) w[x - 1][y + 1]

@@ -1,10 +1,10 @@
 #ifndef __LIB_H
 #define __LIB_H
 
-#include "types.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include "types.h"
 
 /* foreground colors */
 #define FBLACK	 30
@@ -38,7 +38,7 @@
 
 #define FVALUE(x, y) (x + y)
 
-#define WALLS 2
+#define WALLS 3
 
 /* functions protoype */
 maze_t *initmaze(void);

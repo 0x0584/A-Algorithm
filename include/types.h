@@ -8,13 +8,16 @@ typedef enum BOOL {
 
 typedef unsigned int index;
 typedef unsigned int uint;
+typedef struct COORDINATE cord_t;
+typedef struct NODE node_t;
+typedef struct MAZE maze_t;
 
-typedef struct COORDINATE {
+struct COORDINATE {
   uint x; 			/* x-axis */
   uint y;			/* y-axis */
-} cord_t;
+};
 
-typedef struct NODE {
+struct NODE {
   cord_t *cord,			/* coordinate of the node */
     *parent;			/* parent of the node */
   bool iswall;			/* is wall: true | false */
@@ -23,19 +26,19 @@ typedef struct NODE {
     heuristic;			/* H value */
   bool isopen;  		/* if true, we can take consider
 				 * this node as a future pathway */
-  struct NODE *next;		/* next node */
+  node_t *next;		/* next node */
   /* for performance reasons; avoiding 
    * decimals! using a whole number is 
    * a lot faster.. */
   #define G_HV 10		/* this is actually 1 */
   #define G_DIAG 14		/* this is actually sqrt(2) */
-} node_t;
+};
 
-typedef struct MAZE {
+struct MAZE {
   node_t **map;			/* maze map */
   uint xdim, ydim;		/* map dimensions */
 
   cord_t *area;			/* starting and target area */
-} maze_t;
+};
 
 #endif	/* __TYPES_H */

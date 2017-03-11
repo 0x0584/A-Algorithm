@@ -1,32 +1,61 @@
+#include "../include/lib.h"
 #include "../include/stack.h"
 
-void reset(stack *stk)
+node_t *
+initnode(cord_t *cord)
 {
-   stk -> top = EMPTY;
+  node_t *foonode = (node_t *) malloc(sizeof(node_t));
+
+  if(foonode == NULL) return NULL;
+
+  foonode->cord = cord;
+  foonode->next = NULL;
+  
+  return foonode;
 }
 
-void push(char c, stack *stk)
+void
+push(node_t **head, cord_t *cord)
 {
-   stk -> top++;
-   stk -> s[stk -> top] = c;
+  node_t *new = initnode(cord);
+  new->next = *head;
+  *head = new;
 }
 
-char pop(stack *stk)
+inline bool
+isempty(node_t **head)
 {
-   return (stk -> s[stk -> top--]);
+  if((*head) == NULL) return true;
+  else return false;
 }
 
-char top(const stack *stk)
+bool
+pop(node_t **head, node_t *data)
 {
-   return (stk -> s[stk -> top]);
+  node_t *foonode;
+
+  if(!isempty(head)) {
+    data->cord = (*head)->cord;
+    data->mvcost = (*head)->mvcost;
+
+    foonode = (*head);
+
+    (*head) = (*head)->next;
+
+    free(foonode);
+    
+    return true;
+  }  else return false;
 }
 
-_Bool empty(const stack *stk)
+node_t *
+check(node_t *head)
 {
-   return ((_Bool) (stk -> top == EMPTY));
-}
+  if(!head) return NULL;
 
-_Bool full(const stack *stk)
-{
-   return ((_Bool) (stk -> top == FULL));
+  node_t *foonode = (node_t *) malloc(sizeof(node_t));
+  
+  foonode->cord = head->cord;
+  
+  return foonode;
 }

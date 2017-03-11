@@ -1,19 +1,11 @@
 #ifndef __STACK_H
 #define __STACK_H
-#define   MAX_LEN    1000
-#define   EMPTY      -1
-#define   FULL       (MAX_LEN - 1)
+#include "types.h"
 
-typedef struct stack {
-   char   s[MAX_LEN];
-   int    top;
-} stack;
-
-void      reset(stack *stk);
-void      push(char c, stack *stk);
-char      pop(stack *stk);
-char      top(const stack *stk);
-_Bool   empty(const stack *stk);
-_Bool   full(const stack *stk);
+node_t * initnode(cord_t *cord);
+void push(node_t **head, cord_t *cord);
+bool isempty(node_t **head);
+bool pop(node_t **head, node_t *data);
+node_t * check(node_t *head);
 
 #endif	/* __STACK_H */
