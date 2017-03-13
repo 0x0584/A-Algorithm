@@ -21,11 +21,12 @@ struct NODE {
   cord_t *cord,			/* coordinate of the node */
     *parent;			/* parent of the node */
   bool iswall;			/* is wall: true | false */
-  uint mvcost,			/* G value is vary between 
+  uint mvcost;			/* G value is vary between 
 				 * horizontal/vertical directions*/
-    heuristic;			/* H value */
+  float heuristic;		/* H value */
   bool isopen;  		/* if true, we can take consider
 				 * this node as a future pathway */
+  bool ismarked;
   node_t *next;		/* next node */
   /* for performance reasons; avoiding 
    * decimals! using a whole number is 

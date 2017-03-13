@@ -46,6 +46,6 @@ node_t **initmap(uint __xdim, uint __ydim, /* map dimensions */
 		 cord_t *__area);	   /* set of points */
 void putmaze(maze_t *__maze);
 void mfree(maze_t *__maze);
-void seek(maze_t *__maze, cord_t *__area);
+bool seek(maze_t *__maze, cord_t *__area);
 
 #endif	/* __LIB_H */

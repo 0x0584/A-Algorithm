@@ -2,60 +2,60 @@
 #include "../include/stack.h"
 
 node_t *
-initnode(cord_t *cord)
+initnode(cord_t *c)
 {
   node_t *foonode = (node_t *) malloc(sizeof(node_t));
 
   if(foonode == NULL) return NULL;
 
-  foonode->cord = cord;
+  foonode->cord = c;
   foonode->next = NULL;
   
   return foonode;
 }
 
 void
-push(node_t **head, cord_t *cord)
+push(node_t **h, cord_t *c)
 {
-  node_t *new = initnode(cord);
-  new->next = *head;
-  *head = new;
+  node_t *new = initnode(c);
+  new->next = *h;
+  *h = new;
 }
 
 inline bool
-isempty(node_t **head)
+isempty(node_t **h)
 {
-  if((*head) == NULL) return true;
+  if((*h) == NULL) return true;
   else return false;
 }
 
 bool
-pop(node_t **head, node_t *data)
+pop(node_t **h, node_t *d)
 {
   node_t *foonode;
 
-  if(!isempty(head)) {
-    data->cord = (*head)->cord;
-    data->mvcost = (*head)->mvcost;
+  if(!isempty(h)) {
+    d->cord = (*h)->cord;
+    d->mvcost = (*h)->mvcost;
 
-    foonode = (*head);
+    foonode = (*h);
 
-    (*head) = (*head)->next;
+    (*h) = (*h)->next;
 
     free(foonode);
     
     return true;
-  }  else return false;
+  } else return false;
 }
 
 node_t *
-check(node_t *head)
+check(node_t *h)
 {
-  if(!head) return NULL;
+  if(!h) return NULL;
 
   node_t *foonode = (node_t *) malloc(sizeof(node_t));
   
-  foonode->cord = head->cord;
+  foonode->cord = h->cord;
   
   return foonode;
 }

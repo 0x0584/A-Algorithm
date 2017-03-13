@@ -1,9 +1,9 @@
 /* [+] note to self:
  *
  * you vs time; who would be the winner? 
- * trust me, you don't really what would happen 
- * if you lose; an undefined behavior!
- *
+ * trust me, you don't really know what
+ * would happen if you lose; an undefined 
+ * behavior!
  */
 
 
@@ -18,8 +18,6 @@ teststack()
   cord_t c = {0,0};
   node_t *head = initnode(&c);
   node_t *n = (node_t *) malloc(sizeof(node_t));
-
-  node_t *temp;
 
   push(&head, &c);
   push(&head, &c);
@@ -58,7 +56,8 @@ main()
 
   putmaze(maze);
 
-  seek(maze, maze->area);
+  if(seek(maze, maze->area)) puts("HAS A SOLUTIOn");
+    else puts("HAS A SOLUTIOn");
   
   mfree(maze);
   

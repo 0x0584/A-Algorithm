@@ -4,7 +4,7 @@
 CC = gcc
 CFLAGS = -ggdb -O2 -Wall -Wextra -Wpadded \
 	-D DEBUG # -pedantic -D MEM_DEBUG #-save-temps
-LDFLAGS = -I. #-lncurses
+LDFLAGS = -I. -lm #-lncurses
 
 EXEC = maze
 ARGS = #

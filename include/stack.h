@@ -2,10 +2,10 @@
 #define __STACK_H
 #include "types.h"
 
-node_t * initnode(cord_t *cord);
-void push(node_t **head, cord_t *cord);
-bool isempty(node_t **head);
-bool pop(node_t **head, node_t *data);
-node_t * check(node_t *head);
+node_t * initnode(cord_t *__cord);
+void push(node_t **__head, cord_t *__cord);
+bool isempty(node_t **__head);
+bool pop(node_t **__head, node_t *__data);
+node_t * check(node_t *__head);
 
 #endif	/* __STACK_H */
