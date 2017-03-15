@@ -1,4 +1,5 @@
 #include <math.h>
+
 #include "../include/lib.h"
 #include "../include/stack.h"
 
@@ -57,7 +58,7 @@ initmap(uint x, uint y, cord_t *a)
       m[i][j].mvcost = m[i][j].heuristic = 0;
 
       m[i][j].isopen = true; 
-      m[i][j].ismarked = false;
+      m[i][j].ismarked = m[i][j].belongstopath = false;
     }
   }
 
@@ -93,7 +94,8 @@ putmaze(maze_t *m)
       char nodeval;			     /* hold the node value */
       bool isfirsttime = (i == 0 && j == 0), /* when to print sidewalls */
 	islasttime = (i == (m->xdim - 1) && j == (m->ydim - 1));
-      bool wall = m->map[i][j].iswall, marked = m->map[i][j].ismarked;
+      bool wall = m->map[i][j].iswall, marked = m->map[i][j].ismarked,
+	belongstopath = m->map[i][j].belongstopath;
       uint xstart = m->area[START].x, ystart = m->area[START].y,
 	xtarget = m->area[TARGET].x, ytarget = m->area[TARGET].y;
       
@@ -118,11 +120,12 @@ putmaze(maze_t *m)
       /* vary the node-color based on its type */
       switch(nodeval) {
       case WALLCHAR: putcolored(nodeval, FBLUE, BWHITE); break;
-      case STARTCHAR: putcolored(nodeval, FBLACK, BGREEN); break;
-      case TARGETCHAR: putcolored(nodeval, FBLACK, BYELLOW); break;
+      case STARTCHAR: putcolored(nodeval, FBLACK, BYELLOW); break;
+      case TARGETCHAR: putcolored(nodeval, FBLACK, BRED); break;
 
       default:
 	if(!marked) putcolored(nodeval, FBLACK, BWHITE);
+	else if(belongstopath) putcolored((nodeval = 'o'), FRED, BGREEN);
 	else putcolored((nodeval = '*'), FRED, BCYAN);
 	  
 	break;
@@ -152,6 +155,7 @@ putmaze(maze_t *m)
 bool
 seek(maze_t *m, cord_t *a)
 {
+  puts("staring seek..");
 #define POSSIBLE_MOVES 8 /* no limit on the moves */
 
 #define UP(w, x, y)		w[x - 1][y + 0]
@@ -203,71 +207,77 @@ seek(maze_t *m, cord_t *a)
   void successor(node_t **head, cord_t cord, uint mvcost) {
 
     uint x = cord.x, y = cord.y;
-    
-    if(DOWN(m->map, x, y).isopen && !DOWN(m->map, x, y).iswall &&
-       DOWNCORD(cord)) {
-      DOWN(m->map, x, y).isopen = false;
-      DOWN(m->map, x, y).ismarked = true;
-      insert(head, DOWN(m->map, x, y).cord, mvcost);
-    }
 
-    if(UP(m->map, x, y).isopen && !UP(m->map, x, y).iswall &&
-       UPCORD(cord)) {
-      UP(m->map, x, y).isopen = false;
-      UP(m->map, x, y).ismarked = true;
-      insert(head, UP(m->map, x, y).cord, mvcost);
-    }
+    if(x != a[TARGET].x && y != a[TARGET].y) {
+      if(DOWN(m->map, x, y).isopen && !DOWN(m->map, x, y).iswall &&
+	 DOWNCORD(cord)) {
+	DOWN(m->map, x, y).isopen = false;
+	DOWN(m->map, x, y).ismarked = true;
+	insert(head, DOWN(m->map, x, y).cord, mvcost);
+      }
 
-    if(LEFT(m->map, x, y).isopen && !LEFT(m->map, x, y).iswall &&
-       LEFTCORD(cord)) {
-      LEFT(m->map, x, y).isopen = false;
-      LEFT(m->map, x, y).ismarked = true;
-      insert(head, LEFT(m->map, x, y).cord, mvcost);
-    }
+      if(UP(m->map, x, y).isopen && !UP(m->map, x, y).iswall &&
+	 UPCORD(cord)) {
+	UP(m->map, x, y).isopen = false;
+	UP(m->map, x, y).ismarked = true;
+	insert(head, UP(m->map, x, y).cord, mvcost);
+      }
 
-    if(RIGHT(m->map, x, y).isopen && !RIGHT(m->map, x, y).iswall &&
-       RIGHTCORD(cord)) {
-      RIGHT(m->map, x, y).isopen = false;
-      RIGHT(m->map, x, y).ismarked = true;
-      insert(head,  RIGHT(m->map, x, y).cord, mvcost);
-    }
+      if(LEFT(m->map, x, y).isopen && !LEFT(m->map, x, y).iswall &&
+	 LEFTCORD(cord)) {
+	LEFT(m->map, x, y).isopen = false;
+	LEFT(m->map, x, y).ismarked = true;
+	insert(head, LEFT(m->map, x, y).cord, mvcost);
+      }
+
+      if(RIGHT(m->map, x, y).isopen && !RIGHT(m->map, x, y).iswall &&
+	 RIGHTCORD(cord)) {
+	RIGHT(m->map, x, y).isopen = false;
+	RIGHT(m->map, x, y).ismarked = true;
+	insert(head,  RIGHT(m->map, x, y).cord, mvcost);
+      }
     
-    if(DOWNLEFT(m->map, x, y).isopen && !DOWNLEFT(m->map, x, y).iswall &&
-       DOWNLEFTCORD(cord)) {
-       DOWNLEFT(m->map, x, y).isopen = false;
-      DOWNLEFT(m->map, x, y).ismarked = true;
-      insert(head, DOWNLEFT(m->map, x, y).cord, mvcost);
-    }
+      if(DOWNLEFT(m->map, x, y).isopen && !DOWNLEFT(m->map, x, y).iswall &&
+	 DOWNLEFTCORD(cord)) {
+	DOWNLEFT(m->map, x, y).isopen = false;
+	DOWNLEFT(m->map, x, y).ismarked = true;
+	insert(head, DOWNLEFT(m->map, x, y).cord, mvcost);
+      }
     
-    if(DOWNRIGHT(m->map, x, y).isopen && !DOWNRIGHT(m->map, x, y).iswall &&
-       DOWNRIGHTCORD(cord)) {
-      DOWNRIGHT(m->map, x, y).isopen = false;
-      DOWNRIGHT(m->map, x, y).ismarked = true;
-      insert(head, DOWNRIGHT(m->map, x, y).cord, mvcost);
-    }
+      if(DOWNRIGHT(m->map, x, y).isopen && !DOWNRIGHT(m->map, x, y).iswall &&
+	 DOWNRIGHTCORD(cord)) {
+	DOWNRIGHT(m->map, x, y).isopen = false;
+	DOWNRIGHT(m->map, x, y).ismarked = true;
+	insert(head, DOWNRIGHT(m->map, x, y).cord, mvcost);
+      }
     
-    if(UPLEFT(m->map, x, y).isopen && !UPLEFT(m->map, x, y).iswall &&
-       UPLEFTCORD(cord)) {
-      UPLEFT(m->map, x, y).isopen = false;
-      UPLEFT(m->map, x, y).ismarked = true;
-      insert(head, UPLEFT(m->map, x, y).cord, mvcost);
-    }
+      if(UPLEFT(m->map, x, y).isopen && !UPLEFT(m->map, x, y).iswall &&
+	 UPLEFTCORD(cord)) {
+	UPLEFT(m->map, x, y).isopen = false;
+	UPLEFT(m->map, x, y).ismarked = true;
+	insert(head, UPLEFT(m->map, x, y).cord, mvcost);
+      }
     
-    if(UPRIGHT(m->map, x, y).isopen && !UPRIGHT(m->map, x, y).iswall &&
-       UPRIGHTCORD(cord)) {
-      UPRIGHT(m->map, x, y).isopen = false;
-      UPRIGHT(m->map, x, y).ismarked = true;
-      insert(head, UPRIGHT(m->map, x, y).cord, mvcost);
-    }    
+      if(UPRIGHT(m->map, x, y).isopen && !UPRIGHT(m->map, x, y).iswall &&
+	 UPRIGHTCORD(cord)) {
+	UPRIGHT(m->map, x, y).isopen = false;
+	UPRIGHT(m->map, x, y).ismarked = true;
+	insert(head, UPRIGHT(m->map, x, y).cord, mvcost);
+      }
+    } else puts("IS TARGET!!");
   };
 
   /* local variables */
   uint mvcost = 0;		    /* # of nodes in the maze */
   uint xtar = a[TARGET].x, ytar = a[TARGET].y;
-  node_t *head, *data;		    /* data is to get the poped data */
+  node_t *head = initnode(&a[START]), *data;		    /* data is to get the poped data */
 
 
   /* function body */
+  /* starting.. */
+#ifdef DEBUG
+  printf("head: %p - START(%d %d) - cost: %d\t", &head, a[START].x, a[START].y, mvcost);
+#endif
 
   data = (node_t *) malloc(sizeof(node_t));
 
@@ -276,6 +286,8 @@ seek(maze_t *m, cord_t *a)
   /* add te starting area to our linkedlist */
   insert(&head, &a[START], mvcost);
   
+  int i = 0;
+
   /* seeking the target.. */
   while(true) {
     cord_t current;
@@ -286,20 +298,35 @@ seek(maze_t *m, cord_t *a)
     /* pop current node into data */
 
     pop(&head, data);
-
     current = *(data->cord);
 
+    m->map[current.x][current.y].belongstopath = true;
+
+#ifdef DEBUG   
+    printf("head: %p - current(%d %d) - cost: %d\t", &head, current.x, current.y, mvcost);
+#endif
+    
     /* set current to false */
     m->map[current.x][current.y].isopen = false;
     
     if(current.x == xtar && current.y == ytar)
       return true;
+    /* getchar(); */
+
+    /* system("clear"); */
+
+    successor(&head, current, ++mvcost);
+
     putmaze(m);
     getchar();
-    successor(&head, current, ++mvcost);
+#ifdef DEBUG
+    printf("%d time(s)\n", i++);
+#endif
+
   }
 
   free(data);
+  free(head);
 }
 
 void

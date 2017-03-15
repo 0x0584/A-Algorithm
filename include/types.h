@@ -1,7 +1,7 @@
 #ifndef __TYPES_H
 #define __TYPES_H
 
-typedef enum BOOL {
+typedef enum Boolean {
   false = (1==0),
   true = !(false)
 } bool;
@@ -27,6 +27,7 @@ struct NODE {
   bool isopen;  		/* if true, we can take consider
 				 * this node as a future pathway */
   bool ismarked;
+  bool belongstopath;
   node_t *next;		/* next node */
   /* for performance reasons; avoiding 
    * decimals! using a whole number is 

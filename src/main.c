@@ -58,7 +58,8 @@ main()
 
   if(seek(maze, maze->area)) puts("HAS A SOLUTIOn");
     else puts("HAS A SOLUTIOn");
-  
+
+    putmaze(maze);
   mfree(maze);
   
   return 0;
