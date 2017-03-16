@@ -29,7 +29,7 @@ adjacents(cord_t *c, uint xdim, uint ydim)
   int i, nonpossible = 0;
 
   for(i = 0; i < DIRECTIONS; ++i) {
-    uint x = c->x + directions[i][1],
+    int x = c->x + directions[i][1],
       y = c->y + directions[i][0];
   
     /* Stay within the grid's boundaries */
@@ -63,52 +63,69 @@ initneighbors(maze_t *m, node_t *n, uint xdim, uint ydim, uint *count)
   /* get list of possible nodes */
   cord_t **next = adjacents(n->cord, xdim, ydim);
   walkable = (node_t **) malloc(sizeof(node_t *));
-  printf("%p", walkable);
+  printf("walkable: %p", walkable);
+
   puts("initneighbors");
 
   for(i = 0; i < DIRECTIONS; ++i) {
-      uint x = next[i]->x;
-      uint y = next[i]->y;
 
-      if(!next[i]) continue; /* next is NULL */
+    puts("begin loop");
+    
+    uint x = next[i]->x;
+    uint y = next[i]->y;
+
+    printf("(%s)m->map[%d][%d] = (%d, %d)\n", 
+	   m->map[x][y]->iswall ? "wall":"nowall" , x, y, 
+	   m->map[x][y]->cord->x, m->map[x][y]->cord->y);
       
-      node_t *node = m->map[x][y];
       
-      /* ignore non-walkable nodes */
-      if (!node->iswall) continue;
+    node_t *node = m->map[x][y];
+      
+    /* ignore non-walkable nodes */
+    if(node->iswall) continue;
 
-      /* ignore already-closed nodes */
-      if (node->state == CLOSED) continue;
+    /* ignore already-closed nodes */
+    if(node->state == CLOSED) {
+      printf("closed:(%d, %d)", node->cord->x,node->cord->y);
+      continue;
+    }
 
-      /* Already-open nodes are only added to the
-       * list if their G-value is lower going via
-       * this route. */
-      if (node->state == OPEN) {
-	float traversalcost = trav(node->cord, node->parent->cord);
-	float gtemp = n->mvcost + traversalcost;
+    if(node->state == OPEN)
+      printf("open: (%d, %d)", node->cord->x,node->cord->y);
+      
+    /* Already-open nodes are only added to the
+     * list if their G-value is lower going via
+     * this route. */
+    if(node->state == OPEN) {
+      float traversalcost = trav(node->cord, node->parent->cord);
+      float gtemp = n->mvcost + traversalcost;
 
-	/* if the  */
-	if (gtemp < n->mvcost) {
-	  node->parent = n;
-	  node->mvcost = node->parent->mvcost + trav(node->cord, node->parent->cord);	  
-	};
-      } else {
-	/* If it's untested, set the parent and 
-	 * flag it as 'OPEN' for consideration */
+      /* if the  */
+      if(gtemp < n->mvcost) {
 	node->parent = n;
 	node->mvcost = node->parent->mvcost + trav(node->cord, node->parent->cord);
-	node->state = OPEN;
-	if(node->state == OPEN) printf("open: (%d, %d)", node->cord->x,node->cord->y);
+	printf("%p, %d", node->parent, node->mvcost);
       };
+    } else {
+      /* If it's untested, set the parent and 
+       * flag it as 'OPEN' for consideration */
+      node->parent = n;
+      node->mvcost = node->parent->mvcost + trav(node->cord, node->parent->cord);
+      node->state = OPEN;
+    };
       
-      walkable[wcount++] = (node_t *) malloc(sizeof(node_t ));
-      walkable[wcount - 1] = node;
+    walkable[wcount++] = (node_t *) malloc(sizeof(node_t ));
+    walkable[wcount - 1] = node;
 
-      printf("%d, %d: %d", walkable[wcount - 1]->cord->x, walkable[wcount - 1]->cord->y, walkable[wcount - 1]->state);
-      getchar();
-      putmaze(m);
+    printf("walkable[%d]%d, %d: %d\n", wcount -1,
+	   walkable[wcount - 1]->cord->x,
+	   walkable[wcount - 1]->cord->y,
+	   walkable[wcount - 1]->state);
+
+    getchar();
+    putmaze(m);
       
-      getchar();
+    getchar();
   };
 
   puts("end init");
@@ -132,13 +149,14 @@ seek(maze_t *m, node_t *c, uint xdim, uint ydim)
 
   printf("begin seek%d \n", u++);
 
-  for(i = 0; i < ncount; ++i)
+  for(i = 0; i < ncount; ++i) {
     /* check whether the end node has been reached */
-    if(neighbors[i]->cord->x == m->start->cord->x &&
+    if(neighbors[i]->cord->x == m->target->cord->x &&
        neighbors[i]->cord->y == m->target->cord->y) return true;
     /* if not, check the next set of nodes */
     else if(seek(m, neighbors[i], xdim, ydim)) return true;
-  
+
+  }
   /* The method returns false if this path
    * leads to be a dead end */
   return false;

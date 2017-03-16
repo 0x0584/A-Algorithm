@@ -150,9 +150,9 @@ putmaze(maze_t *m)
       case TARGETCHAR: putcolored(nodeval, FBLACK, BRED); break;
 
       default:
-	if(state == OPEN) putcolored((nodeval = '*'), FRED, BBLACK); 
-	else if(state == CLOSED) putcolored((nodeval = '$'), FBLUE, BRED);
-	else if(state == IN_PATH) putcolored((nodeval = '#'), FCYAN, BGREEN);
+	if(state == OPEN) putcolored((nodeval = '*'), FRED, BGREEN); 
+	else if(state == CLOSED) putcolored((nodeval = '$'), FBLACK, BBLUE);
+	else if(state == IN_PATH) putcolored((nodeval = '#'), FCYAN, BYELLOW);
 	else putcolored((nodeval = '.'), FMAGENTA, BWHITE);
 	
 	break;
