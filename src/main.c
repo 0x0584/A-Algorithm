@@ -46,20 +46,30 @@ main()
   getchar();
   srand(time(NULL));
   
+  puts("#");
   maze_t *maze = initmaze();
 
-#ifdef DEBUG  
-  printf("START(%d, %d) -> TARGET(%d, %d)\n",
-	 maze->area[START].x, maze->area[START].y,
-	 maze->area[TARGET].x, maze->area[TARGET].y);
-#endif
+/* #ifdef DEBUG   */
+/*   printf("START(%d, %d) -> TARGET(%d, %d)\n", */
+/* 	 maze->area[START].x, maze->area[START].y, */
+/* 	 maze->area[TARGET].x, maze->area[TARGET].y); */
+/* #endif */
 
   putmaze(maze);
+  getchar();
+  index i = 0;
+  cord_t *path = findpath(maze, maze->start->cord, maze->target->cord);
 
-  if(seek(maze, maze->area)) puts("HAS A SOLUTIOn");
-    else puts("HAS A SOLUTIOn");
-
-    putmaze(maze);
+  uint xtarget = maze->target->cord->x,
+    ytarget = maze->target->cord->y;
+  
+  while(path[i].x != xtarget && path[i].y != ytarget) {
+    uint x = path[i].x, y = path[i].y;
+    maze->map[x][y]->state = IN_PATH;
+    ++i;
+  }
+  
+  putmaze(maze);
   mfree(maze);
   
   return 0;
