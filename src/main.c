@@ -56,6 +56,7 @@ main()
 /* #endif */
 
   putmaze(maze);
+  getchar();
   index i = 0;
   cord_t *path = findpath(maze, maze->start->cord, maze->target->cord);
 

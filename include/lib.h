@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <time.h>
 
+#include "headers.h"
 #include "types.h"
 
 /* foreground colors */
@@ -46,16 +47,6 @@ maze_t *initmaze(void);
 node_t ***initmap(uint __xdim, uint __ydim, node_t *tonode);
 void putmaze(maze_t *__maze);
 void mfree(maze_t *__maze);
-bool seek(maze_t *__maze, node_t *__current,
-	  uint __maze_xdim, uint __maze_ydim);
-cord_t *
-findpath(maze_t *m, cord_t *from, cord_t *to);
-
-node_t **
-initneighbors(maze_t *m, node_t *n, uint xdim, uint ydim, uint *count);
-cord_t **
-adjacents(cord_t *c, uint xdim, uint ydim);
-
 
 
 #endif	/* __LIB_H */
