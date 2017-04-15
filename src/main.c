@@ -9,7 +9,7 @@
 
 #include "../include/types.h"
 #include "../include/lib.h"
-
+#include "../include/path.h"
 #include "../include/stack.h"
 
 void
@@ -58,13 +58,14 @@ main()
   putmaze(maze);
   getchar();
   index i = 0;
-  cord_t *path = findpath(maze, maze->start->cord, maze->target->cord);
+  cord_t **path = findpath(maze, maze->start->cord, maze->target->cord);
 
   uint xtarget = maze->target->cord->x,
     ytarget = maze->target->cord->y;
-  
-  while(path[i].x != xtarget && path[i].y != ytarget) {
-    uint x = path[i].x, y = path[i].y;
+
+  while(path[i]->x != xtarget && path[i]->y != ytarget) {
+    puts("printing path");
+    uint x = path[i]->x, y = path[i]->y;
     maze->map[x][y]->state = IN_PATH;
     ++i;
   }

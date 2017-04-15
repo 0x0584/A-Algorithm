@@ -25,7 +25,7 @@ initmaze(void)
   footarget = (node_t *) malloc(sizeof(node_t));
   footarget->cord = (cord_t *) malloc(sizeof(cord_t));
   footarget->parent = NULL;
-
+  footarget->iswall = false;
   /* set random coordinates for the starting-area */
   footarget->cord->x = rand()%XDIM; 
   footarget->cord->y = rand()%YDIM;
@@ -41,6 +41,7 @@ initmaze(void)
   printf("start(%d, %d) target(%d, %d)\n",
 	 foomaze->start->cord->x,foomaze->start->cord->y,
 	 foomaze->target->cord->x,foomaze->target->cord->y);
+  getchar();
   
   /* setup the maze map */
   foomaze->map = (node_t ***) initmap(foomaze->xdim, foomaze->ydim, footarget);
@@ -177,6 +178,7 @@ putmaze(maze_t *m)
 #undef WALLCHAR 
 #undef ROADCHAR
 #undef SIDEWALL
+
 }
 
 

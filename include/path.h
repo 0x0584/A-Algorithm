@@ -6,13 +6,11 @@
 
 bool seek(maze_t *__maze, node_t *__current,
 	  uint __maze_xdim, uint __maze_ydim);
-cord_t *
-findpath(maze_t *m, cord_t *from, cord_t *to);
+cord_t ** findpath(maze_t *__maze, cord_t *__from, cord_t *__to);
 
-node_t **
-initneighbors(maze_t *m, node_t *n, uint xdim, uint ydim, uint *count);
-cord_t **
-adjacents(cord_t *c, uint xdim, uint ydim);
+node_t ** initneighbors(maze_t *__m, node_t *__current,
+			uint __xdim, uint __ydim, uint *__count);
+cord_t ** adjacents(cord_t *c, uint xdim, uint ydim, uint *count);
 float trav(cord_t *a, cord_t *b) ;
 
 
